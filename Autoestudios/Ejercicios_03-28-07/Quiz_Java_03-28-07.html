@@ -1,0 +1,895 @@
+<title>¿Compila o no compila? — 50 dilemas de Java</title>
+
+<style>
+  :root {
+    --paper: #E9EBEF;
+    --surface: #F7F8FA;
+    --well: #DEE2E9;
+    --ink: #13161D;
+    --ink-soft: #475061;
+    --ink-faint: #78808F;
+    --rule: #C6CCD6;
+    --accent: #2C5A87;
+    --accent-well: #DCE6F0;
+    --ok: #0D6A5C;
+    --ok-well: #D9EBE6;
+    --bad: #A2331F;
+    --bad-well: #F4DDD7;
+
+    --mono: ui-monospace, "Cascadia Code", "JetBrains Mono", "SF Mono", Consolas, Menlo, monospace;
+    --serif: ui-serif, "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #0E1116;
+      --surface: #161A21;
+      --well: #1F242D;
+      --ink: #E1E5EC;
+      --ink-soft: #A1AAB9;
+      --ink-faint: #6D7686;
+      --rule: #282E39;
+      --accent: #7BA6D4;
+      --accent-well: #1A2735;
+      --ok: #55C5AD;
+      --ok-well: #102E2A;
+      --bad: #EA7357;
+      --bad-well: #331813;
+      color-scheme: dark;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper: #0E1116;
+    --surface: #161A21;
+    --well: #1F242D;
+    --ink: #E1E5EC;
+    --ink-soft: #A1AAB9;
+    --ink-faint: #6D7686;
+    --rule: #282E39;
+    --accent: #7BA6D4;
+    --accent-well: #1A2735;
+    --ok: #55C5AD;
+    --ok-well: #102E2A;
+    --bad: #EA7357;
+    --bad-well: #331813;
+    color-scheme: dark;
+  }
+
+  :root[data-theme="light"] {
+    --paper: #E9EBEF;
+    --surface: #F7F8FA;
+    --well: #DEE2E9;
+    --ink: #13161D;
+    --ink-soft: #475061;
+    --ink-faint: #78808F;
+    --rule: #C6CCD6;
+    --accent: #2C5A87;
+    --accent-well: #DCE6F0;
+    --ok: #0D6A5C;
+    --ok-well: #D9EBE6;
+    --bad: #A2331F;
+    --bad-well: #F4DDD7;
+    color-scheme: light;
+  }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 17px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 52rem;
+    margin: 0 auto;
+    padding: 0 1.25rem 5rem;
+  }
+
+  .masthead {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 3rem 0 1.75rem;
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .masthead h1 {
+    font-size: clamp(1.9rem, 5vw, 2.7rem);
+    line-height: 1.12;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+
+  .standfirst {
+    color: var(--ink-soft);
+    max-width: 62ch;
+  }
+
+  .standfirst code, .ask code, .why code, .closer code {
+    font-family: var(--mono);
+    font-size: 0.87em;
+    background: var(--well);
+    padding: 0.1em 0.35em;
+    border-radius: 2px;
+  }
+
+  .scorebar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: color-mix(in srgb, var(--paper) 88%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--rule);
+    margin: 0 -1.25rem;
+    padding: 0.7rem 1.25rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+
+  .scorerow {
+    display: flex;
+    align-items: center;
+    gap: 1.1rem;
+    flex-wrap: wrap;
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tally {
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.04em;
+  }
+
+  .tally b { font-weight: 700; font-size: 1rem; }
+  .tally.is-ok b { color: var(--ok); }
+  .tally.is-bad b { color: var(--bad); }
+
+  .controls { margin-left: auto; display: flex; gap: 0.45rem; }
+
+  .ctl {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    color: var(--ink-soft);
+    background: transparent;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    padding: 0.3rem 0.6rem;
+    cursor: pointer;
+  }
+
+  .ctl:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .ctl[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: var(--accent-well); }
+  .ctl:disabled { opacity: 0.35; cursor: default; }
+
+  .meter { height: 2px; background: var(--rule); position: relative; overflow: hidden; }
+  .meter i {
+    position: absolute; inset: 0 auto 0 0; width: 0;
+    background: var(--accent); transition: width 0.25s ease;
+  }
+
+  .block { margin-top: 3.25rem; display: flex; flex-direction: column; gap: 1rem; }
+
+  .block-head {
+    display: flex; align-items: baseline; gap: 0.7rem;
+    border-bottom: 1px solid var(--rule); padding-bottom: 0.5rem;
+  }
+
+  .block-num { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.1em; color: var(--accent); }
+  .block-head h2 { font-size: 1.12rem; font-weight: 600; letter-spacing: -0.005em; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--rule);
+    border-radius: 3px;
+    padding: 1.15rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    transition: border-left-color 0.2s ease;
+  }
+
+  .card[data-state="ok"] { border-left-color: var(--ok); }
+  .card[data-state="bad"] { border-left-color: var(--bad); }
+
+  .prompt { display: flex; gap: 0.8rem; align-items: baseline; }
+
+  .qnum {
+    font-family: var(--mono); font-size: 0.74rem; color: var(--ink-faint);
+    font-variant-numeric: tabular-nums; flex: none; padding-top: 0.15rem;
+  }
+
+  .promptbody { display: flex; flex-direction: column; gap: 0.3rem; }
+
+  .phase {
+    align-self: flex-start;
+    font-family: var(--mono);
+    font-size: 0.63rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid currentColor;
+    border-radius: 2px;
+    padding: 0.1rem 0.4rem;
+  }
+
+  .ask { max-width: 62ch; text-wrap: pretty; }
+
+  pre.code {
+    margin: 0;
+    background: var(--well);
+    border-radius: 3px;
+    padding: 0.9rem 1rem;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 0.79rem;
+    line-height: 1.7;
+    tab-size: 4;
+  }
+
+  .answers { display: flex; gap: 0.5rem; }
+
+  .vote {
+    font-family: var(--mono); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.09em;
+    min-width: 5.5rem; padding: 0.5rem 0.9rem;
+    background: transparent; color: var(--ink-soft);
+    border: 1px solid var(--rule); border-radius: 2px; cursor: pointer;
+    transition: background 0.14s ease, color 0.14s ease, border-color 0.14s ease;
+  }
+
+  .vote:hover:not(:disabled) { border-color: var(--ink-soft); color: var(--ink); }
+  .vote:disabled { cursor: default; }
+  .vote[data-mark="right"] { border-color: var(--ok); background: var(--ok-well); color: var(--ok); }
+  .vote[data-mark="wrong"] { border-color: var(--bad); background: var(--bad-well); color: var(--bad); }
+  .vote[data-mark="missed"] { border-color: var(--ok); color: var(--ok); border-style: dashed; }
+  .vote[data-mark="dim"] { opacity: 0.4; }
+
+  .verdict {
+    display: none; flex-direction: column; gap: 0.5rem;
+    border-top: 1px solid var(--rule); padding-top: 0.85rem;
+  }
+
+  .card[data-state] .verdict { display: flex; }
+
+  .caret {
+    font-family: var(--mono); font-size: 0.78rem; line-height: 1;
+    color: var(--accent); letter-spacing: 0.06em;
+  }
+
+  .verdict-label { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.13em; text-transform: uppercase; }
+  .card[data-state="ok"] .verdict-label { color: var(--ok); }
+  .card[data-state="bad"] .verdict-label { color: var(--bad); }
+
+  .why { color: var(--ink-soft); font-size: 0.95rem; max-width: 64ch; text-wrap: pretty; }
+  .why code { color: var(--ink); }
+  .why strong { color: var(--ink); font-weight: 600; }
+  .why em {
+    font-style: normal; color: var(--accent);
+    font-family: var(--mono); font-size: 0.85em; letter-spacing: 0.01em;
+  }
+
+  .filtered .card[data-state="ok"],
+  .filtered .card:not([data-state]) { display: none; }
+  .filtered .block:not(:has(.card[data-state="bad"])) { display: none; }
+
+  .closer {
+    margin-top: 3.5rem; border-top: 1px solid var(--rule); padding-top: 1.25rem;
+    color: var(--ink-faint); font-family: var(--mono); font-size: 0.74rem;
+    line-height: 1.8; letter-spacing: 0.02em;
+  }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+  @media (max-width: 34rem) {
+    body { font-size: 16px; }
+    .controls { margin-left: 0; width: 100%; }
+    .prompt { flex-direction: column; gap: 0.35rem; }
+    pre.code { font-size: 0.73rem; }
+  }
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <span class="eyebrow">EIF400-II-2026 · Paradigmas · Sesión 28/07</span>
+    <h1>¿Compila o no compila?</h1>
+    <p class="standfirst">
+      50 dilemas de Java, con el diamante y la resolución de <code>default</code> como eje.
+      Decidí <strong>SÍ</strong> o <strong>NO</strong> antes de destapar la explicación. Cada
+      tarjeta lleva una etiqueta que te dice <strong>en qué fase</strong> se te pregunta —
+      <em>compilación</em> o <em>ejecución</em> —, porque medio quiz consiste en no confundirlas.
+      Todo verificado contra <code>javac 25</code>.
+    </p>
+  </header>
+
+  <div class="scorebar">
+    <div class="scorerow">
+      <span class="tally is-ok"><b id="n-ok">0</b> aciertos</span>
+      <span class="tally is-bad"><b id="n-bad">0</b> fallos</span>
+      <span class="tally"><b id="n-left">50</b> sin responder</span>
+      <div class="controls">
+        <button class="ctl" id="btn-filter" type="button" aria-pressed="false" disabled>solo falladas</button>
+        <button class="ctl" id="btn-reset" type="button">reiniciar</button>
+      </div>
+    </div>
+    <div class="meter"><i id="meter-fill"></i></div>
+  </div>
+
+  <main id="quiz"></main>
+
+  <footer class="closer">
+    Verificado con JDK 25.0.3 · <span id="stamp"></span><br>
+    Jerarquía de desempate para <code>default</code>: 1) la clase le gana a toda interfaz ·
+    2) la subinterfaz más específica le gana a su ancestro · 3) si empatan, es error y hay que
+    desambiguar con <code>Iface.super.metodo()</code>.
+  </footer>
+</div>
+
+<script>
+const BLOCKS = [
+  {
+    title: "El diamante y los métodos default",
+    qs: [
+      {
+        phase: "¿qué imprime?",
+        ask: "¿Imprime <code>B</code>?",
+        code: "interface A { default String who() { return \"A\"; } }\n\nclass B implements A {\n    public String who() { return \"B\"; }\n}\n\ninterface C extends A {\n    default String who() { return \"C\"; }\n}\n\nclass E extends B implements C { }\n\nvoid main() {\n    System.out.println(new E().who());\n}",
+        answer: true,
+        why: "Compila e imprime <code>B</code>. Es la <strong>regla número uno</strong> del desempate: <em>class wins</em>. Un método <strong>concreto heredado de una clase</strong> le gana a cualquier <code>default</code> de interfaz, sin importar cuántos caminos de herencia haya. <code>E</code> no necesita sobreescribir nada. Esta es exactamente la jerarquía <code>A-B-C-E</code> del ejercicio de la sesión."
+      },
+      {
+        phase: "¿compila?",
+        ask: "¿Compila?",
+        code: "interface X { default String who() { return \"X\"; } }\ninterface Y { default String who() { return \"Y\"; } }\n\nclass Z implements X, Y { }",
+        answer: false,
+        why: "<em>error: types X and Y are incompatible; class Z inherits unrelated defaults for who() from types X and Y</em>. Acá <strong>sí</strong> hay diamante irresoluble: dos <code>default</code> en interfaces <strong>no relacionadas</strong>, sin clase que desempate y sin que una sea más específica que la otra. Java se niega y te obliga a decidir a vos. Compará con la pregunta anterior: lo que salvaba a <code>E</code> era la clase <code>B</code>."
+      },
+      {
+        phase: "¿compila?",
+        ask: "¿Compila (y da <code>XY</code>)?",
+        code: "interface X { default String who() { return \"X\"; } }\ninterface Y { default String who() { return \"Y\"; } }\n\nclass Z implements X, Y {\n    public String who() {\n        return X.super.who() + Y.super.who();\n    }\n}",
+        answer: true,
+        why: "Compila e imprime <code>XY</code>. La sintaxis <code>Iface.super.metodo()</code> existe precisamente para esto: desambiguar a mano cuál <code>default</code> querés. Es la respuesta de Java al <code>virtual</code> de C++ — en vez de inventar reglas de fusión, te hace escribir la elección de forma explícita."
+      },
+      {
+        phase: "¿compila?",
+        ask: "¿Compila?",
+        code: "interface X { default String who() { return \"X\"; } }\ninterface X2 extends X { }\n\nclass Z implements X2 {\n    public String who() { return X.super.who(); }\n}",
+        answer: false,
+        why: "<em>error: not an enclosing class: X</em>. <code>Iface.super</code> solo funciona con <strong>superinterfaces directas</strong>. <code>Z</code> implementa <code>X2</code>, no <code>X</code>, aunque llegue a <code>X</code> por herencia. Habría que escribir <code>X2.super.who()</code>. Java no te deja saltarte eslabones de la cadena."
+      },
+      {
+        phase: "¿qué imprime?",
+        ask: "¿Imprime <code>Q</code>?",
+        code: "interface P { default String who() { return \"P\"; } }\ninterface Q extends P { default String who() { return \"Q\"; } }\n\nclass R implements P, Q { }\n\nvoid main() {\n    System.out.println(new R().who());\n}",
+        answer: true,
+        why: "Compila e imprime <code>Q</code>. Es la <strong>regla dos</strong>: entre dos <code>default</code> donde una interfaz <strong>extiende</strong> a la otra, gana la <strong>más específica</strong>. Como <code>Q extends P</code>, el <code>default</code> de <code>Q</code> ya se considera un override del de <code>P</code>, así que no hay conflicto que resolver. Mencionar <code>P</code> en el <code>implements</code> es redundante pero legal."
+      },
+      {
+        phase: "¿compila?",
+        ask: "¿Compila?",
+        code: "interface M { String who(); }\ninterface N { default String who() { return \"N\"; } }\n\nclass W implements M, N { }",
+        answer: false,
+        why: "<em>error: W is not abstract and does not override abstract method who() in M</em>. Este es el caso contraintuitivo: uno pensaría que el <code>default</code> de <code>N</code> \"llena\" el hueco abstracto de <code>M</code>. <strong>No lo hace.</strong> Entre interfaces no relacionadas, un método abstracto <strong>no</strong> se satisface con el <code>default</code> de otra, y la clase queda obligada a implementarlo. Un método abstracto es un compromiso explícito, no un hueco que cualquiera pueda tapar."
+      },
+      {
+        phase: "¿compila?",
+        ask: "¿Compila?",
+        code: "interface O {\n    default String toString() { return \"O\"; }\n}",
+        answer: false,
+        why: "<em>error: default method toString in interface O overrides a member of java.lang.Object</em>. Una interfaz <strong>no puede</strong> dar <code>default</code> a <code>toString</code>, <code>equals</code> ni <code>hashCode</code>. La razón es la regla uno llevada al extremo: toda clase hereda de <code>Object</code>, así que <code>Object</code> siempre ganaría y ese <code>default</code> sería código inalcanzable. Java prefiere prohibirlo a dejarte escribir algo que nunca se ejecuta."
+      },
+      {
+        phase: "¿compila?",
+        ask: "¿Compila?",
+        code: "interface D1 { int VAL = 1; }\ninterface D2 { int VAL = 2; }\n\nclass H implements D1, D2 {\n    int get() { return VAL; }\n}",
+        answer: false,
+        why: "<em>error: reference to VAL is ambiguous — both variable VAL in D1 and variable VAL in D2 match</em>. <strong>Este es el diamante que Java NO resuelve.</strong> Los métodos tienen reglas de desempate; los <strong>campos no tienen ninguna</strong>. Y es justo el caso del ejercicio: <code>A</code> declara <code>POOR_PI = 3.1416</code> y <code>D</code> declara <code>POOR_PI = 3.14</code>. Mientras nadie escriba <code>POOR_PI</code> a secas dentro de <code>E</code>, no pasa nada; el día que alguien lo haga, no compila."
+      },
+      {
+        phase: "¿qué imprime?",
+        ask: "¿Imprime <code>2</code>?",
+        code: "interface D1 { int VAL = 1; }\ninterface D2 { int VAL = 2; }\n\nclass H implements D1, D2 {\n    int get() { return D2.VAL; }\n}\n\nvoid main() {\n    System.out.println(new H().get());\n}",
+        answer: true,
+        why: "Sí. Calificar el nombre resuelve la ambigüedad de la pregunta anterior. Notá el detalle de fondo: los campos de una interfaz son implícitamente <code>public static final</code>, así que <code>D2.VAL</code> no es \"el campo del objeto vía D2\" sino una <strong>constante de la interfaz D2</strong>. Como no hay <strong>estado de instancia</strong> que duplicar, la herencia múltiple de interfaces es segura — y ese es el motivo real por el que Java la permite y prohíbe la de clases."
+      },
+      {
+        phase: "¿compila?",
+        ask: "¿Compila? (esta es la línea marcada con <code>&lt;---</code> del ejercicio de la sesión)",
+        code: "interface A {\n    default double get(boolean hq) { return hq ? 1.0 : 0.5; }\n}\n\nclass B implements A {\n    public double get() { return get(false); }\n}\n\ninterface C extends A {\n    default double get() { return get(true); }\n}\n\nclass E extends B implements C { }\n\nvoid main() {\n    C obj1 = new E();\n    A obj2 = obj1;\n    System.out.println(obj1.get());\n    System.out.println(obj2.get());\n}",
+        answer: false,
+        why: "<em>error: method get in interface A cannot be applied to given types; required: boolean, found: no arguments</em>. Y acá está el nudo: <code>obj1</code> y <code>obj2</code> son <strong>el mismo objeto</strong> (<code>obj1 == obj2</code> da <code>true</code>), pero <strong>el tipo de la referencia decide qué se te permite llamar</strong>. La interfaz <code>A</code> solo declara <code>get(boolean)</code>; el <code>get()</code> sin argumentos vive en <code>B</code> y en <code>C</code>, no en <code>A</code>. Como la resolución es por <strong>tipo estático</strong>, mirar el objeto a través de <code>A</code> te tapa la mitad de sus capacidades. Si borrás esa línea, el programa corre e imprime <code>0.5</code>: gana <code>B</code> por la regla <em>class wins</em>, y el <code>get()</code> de <code>B</code> llama a <code>get(false)</code>."
+      }
+    ]
+  },
+  {
+    title: "Despacho: qué decide el compilador y qué la JVM",
+    qs: [
+      {
+        phase: "¿qué imprime?",
+        ask: "¿Imprime <code>dog</code>?",
+        code: "class Animal { }\nclass Dog extends Animal { }\n\nclass Vet {\n    static String treat(Animal a) { return \"animal\"; }\n    static String treat(Dog d)    { return \"dog\"; }\n}\n\nvoid main() {\n    Animal a = new Dog();\n    System.out.println(Vet.treat(a));\n}",
+        answer: false,
+        why: "Imprime <code>animal</code>. <strong>La sobrecarga se resuelve en compilación por el tipo estático</strong>; la sobreescritura se resuelve en ejecución por el tipo dinámico. Como <code>a</code> está <em>declarada</em> <code>Animal</code>, <code>javac</code> ya grabó la llamada a <code>treat(Animal)</code> y la JVM no vuelve a opinar. Sobrecarga ≠ polimorfismo."
+      },
+      {
+        phase: "¿qué imprime?",
+        ask: "¿Imprime <code>base/sub/sub</code>?",
+        code: "class Base {\n    String tag = \"base\";\n    String name() { return \"base\"; }\n}\n\nclass Sub extends Base {\n    String tag = \"sub\";\n    String name() { return \"sub\"; }\n}\n\nvoid main() {\n    Base b = new Sub();\n    System.out.println(b.tag + \"/\" + b.name() + \"/\" + ((Sub) b).tag);\n}",
+        answer: true,
+        why: "Exacto: <code>base/sub/sub</code>. El <strong>método</strong> es polimórfico (tipo dinámico → <code>sub</code>), pero el <strong>campo no</strong>: los campos no se sobreescriben, se <strong>ocultan</strong> (<em>shadowing</em>), y se resuelven por el tipo estático de la referencia. El objeto tiene <strong>los dos</strong> campos <code>tag</code> adentro al mismo tiempo; el casteo elige cuál mirás. Por eso ocultar campos es una de las peores prácticas de Java."
+      },
+      {
+        phase: "¿qué imprime?",
+        ask: "¿Imprime <code>base</code>?",
+        code: "class Base { static String kind() { return \"base\"; } }\nclass Sub extends Base { static String kind() { return \"sub\"; } }\n\nvoid main() {\n    Base b = new Sub();\n    System.out.println(b.kind());\n}",
+        answer: true,
+        why: "Imprime <code>base</code>. Los métodos <code>static</code> no se sobreescriben, se <strong>ocultan</strong>, igual que los campos. Y <code>b.kind()</code> ni siquiera mira el objeto: <code>javac</code> lo reescribe como <code>Base.kind()</code> según el tipo declarado (y te tira un warning por llamar a un estático a través de una instancia)."
+      },
+      {
+        phase: "¿qué imprime?",
+        ask: "¿Imprime <code>base</code>?",
+        code: "class Base {\n    private String secret() { return \"base\"; }\n    String call() { return secret(); }\n}\n\nclass Sub extends Base {\n    private String secret() { return \"sub\"; }\n}\n\nvoid main() {\n    System.out.println(new Sub().call());\n}",
+        answer: true,
+        why: "Imprime <code>base</code>. Los métodos <code>private</code> <strong>no son heredados ni sobreescribibles</strong> — no participan del despacho dinámico. El <code>secret()</code> de <code>Sub</code> no es un override, es un método distinto que casualmente se llama igual. Por eso <code>call()</code> siempre invoca el suyo. Ponerle <code>@Override</code> al de <code>Sub</code> daría error de compilación."
+      },
+      {
+        phase: "¿qué imprime?",
+        ask: "¿Imprime <code>int</code>?",
+        code: "class Vet {\n    static String t(Object o)  { return \"Object\"; }\n    static String t(Integer i) { return \"Integer\"; }\n    static String t(int i)     { return \"int\"; }\n}\n\nvoid main() {\n    System.out.println(Vet.t(5));\n}",
+        answer: true,
+        why: "Imprime <code>int</code>. La resolución de sobrecarga tiene <strong>tres fases</strong> y solo pasa a la siguiente si ninguna candidata sirve: <strong>1)</strong> sin boxing ni varargs, <strong>2)</strong> permitiendo boxing/unboxing, <strong>3)</strong> permitiendo varargs. <code>t(int)</code> gana en la fase 1. Esta regla escalonada existe para no romper código anterior a Java 5, cuando el autoboxing no existía."
+      },
+      {
+        phase: "¿qué imprime?",
+        ask: "¿Imprime <code>Integer</code>?",
+        code: "class Vet {\n    static String t(Object o)  { return \"Object\"; }\n    static String t(Integer i) { return \"Integer\"; }\n}\n\nvoid main() {\n    System.out.println(Vet.t(5));\n}",
+        answer: true,
+        why: "Imprime <code>Integer</code>. Sin <code>t(int)</code>, la fase 1 no encuentra nada aplicable y se pasa a la fase 2 (con boxing). Ahí las dos sirven, así que gana la <strong>más específica</strong>: <code>Integer</code> es subtipo de <code>Object</code>. La respuesta cambió sin tocar la llamada, solo borrando una sobrecarga."
+      },
+      {
+        phase: "¿qué imprime?",
+        ask: "¿Imprime <code>long</code>?",
+        code: "class Vet {\n    static String t(long l)    { return \"long\"; }\n    static String t(Integer i) { return \"Integer\"; }\n    static String t(int... v)  { return \"varargs\"; }\n}\n\nvoid main() {\n    System.out.println(Vet.t(5));\n}",
+        answer: true,
+        why: "Imprime <code>long</code>. El orden de preferencia queda a la vista: <strong>ensanchamiento primitivo</strong> (<code>int</code>→<code>long</code>) es fase 1, así que gana antes de que se consideren el boxing (fase 2) o los varargs (fase 3). Regla mnemotécnica: <em>ensanchar &gt; encajonar &gt; varargs</em>."
+      }
+    ]
+  },
+  {
+    title: "Orden de inicialización",
+    qs: [
+      {
+        phase: "¿qué imprime?",
+        ask: "¿Imprime <code>14253253</code>?",
+        code: "class Init {\n    static { System.out.print(\"1\"); }\n           { System.out.print(\"2\"); }\n    Init()  { System.out.print(\"3\"); }\n    static { System.out.print(\"4\"); }\n           { System.out.print(\"5\"); }\n}\n\nvoid main() {\n    new Init();\n    new Init();\n}",
+        answer: true,
+        why: "Exacto. El orden es: <strong>1)</strong> los bloques <code>static</code> corren <strong>una sola vez</strong>, al cargar la clase, en orden textual → <code>14</code>. <strong>2)</strong> Por cada <code>new</code>: primero los inicializadores de instancia en orden textual (<code>2</code>, <code>5</code>) y <strong>después</strong> el cuerpo del constructor (<code>3</code>) → <code>253</code>. Dos instancias → <code>253253</code>. La trampa está en que el constructor corre <em>al final</em>, no al principio."
+      },
+      {
+        phase: "¿qué imprime?",
+        ask: "¿Imprime <code>child, value = puesto</code>?",
+        code: "class Parent {\n    Parent() { init(); }\n    void init() { System.out.println(\"parent\"); }\n}\n\nclass Child extends Parent {\n    private String value = \"puesto\";\n\n    @Override\n    void init() {\n        System.out.println(\"child, value = \" + value);\n    }\n}\n\nvoid main() {\n    new Child();\n}",
+        answer: false,
+        why: "Imprime <code>child, value = null</code>. Es el error clásico de <strong>llamar a un método sobreescribible desde el constructor</strong>. La secuencia real es: <code>new Child()</code> → llama implícitamente a <code>super()</code> → el constructor de <code>Parent</code> ejecuta <code>init()</code> → el despacho dinámico va al <code>init()</code> de <code>Child</code> → pero los inicializadores de campo de <code>Child</code> <strong>todavía no corrieron</strong>, así que <code>value</code> vale <code>null</code>. El objeto está a medio construir y ya se le están llamando métodos."
+      },
+      {
+        phase: "¿qué imprime?",
+        ask: "¿Imprime <code>CLASE CARGADA</code> antes del <code>42</code>?",
+        code: "class Lazy {\n    static { System.out.println(\"CLASE CARGADA\"); }\n    static final int N = 42;\n}\n\nvoid main() {\n    System.out.println(Lazy.N);\n}",
+        answer: false,
+        why: "Solo imprime <code>42</code>. <code>N</code> es una <strong>constante de tiempo de compilación</strong> (<code>static final</code> de tipo primitivo con inicializador constante), así que <code>javac</code> la <strong>inserta literalmente</strong> en el punto de uso. El bytecode de <code>main</code> ya trae el <code>42</code> adentro y <strong>nunca menciona a <code>Lazy</code></strong>, así que la clase jamás se inicializa. Consecuencia práctica: si cambiás el valor de una constante y no recompilás <em>todo</em>, quedan binarios con el valor viejo."
+      },
+      {
+        phase: "¿qué imprime?",
+        ask: "¿Imprime <code>CLASE CARGADA</code> antes del <code>42</code>?",
+        code: "class Lazy2 {\n    static { System.out.println(\"CLASE CARGADA\"); }\n    static final int N = calc();\n    static int calc() { return 42; }\n}\n\nvoid main() {\n    System.out.println(Lazy2.N);\n}",
+        answer: true,
+        why: "Ahora sí imprime las dos líneas. Al inicializarse con una <strong>llamada a método</strong>, <code>N</code> deja de ser constante de compilación: hay que ejecutar código para conocer su valor, así que leer <code>Lazy2.N</code> obliga a inicializar la clase y el bloque <code>static</code> corre. <strong>Mismo tipo, mismo valor, mismo <code>final</code>, comportamiento opuesto</strong> — la diferencia está solo en la forma del inicializador."
+      }
+    ]
+  },
+  {
+    title: "Genéricos, borrado de tipos y varianza",
+    qs: [
+      {
+        phase: "¿compila?",
+        ask: "¿Compila?",
+        code: "List<Integer> li = new ArrayList<>();\nList<Object>  lo = li;",
+        answer: false,
+        why: "<em>error: incompatible types: List&lt;Integer&gt; cannot be converted to List&lt;Object&gt;</em>. Los genéricos son <strong>invariantes</strong>. Si se permitiera, podrías hacer <code>lo.add(\"soy un String\")</code> y después <code>li.get(0)</code> explotaría al castear. Como el tipo genérico <strong>se borra</strong> en ejecución, la JVM no podría atajarlo, así que la única defensa es prohibirlo en compilación."
+      },
+      {
+        phase: "¿compila?",
+        ask: "¿Compila?",
+        code: "Object[] arr = new Integer[3];\narr[0] = \"hola\";",
+        answer: true,
+        why: "Compila sin una sola queja. Los <strong>arrays son covariantes</strong>: <code>Integer[]</code> <em>sí</em> es un <code>Object[]</code>. Es la decisión opuesta a la de los genéricos y viene de Java 1.0, cuando no había genéricos y se necesitaba escribir métodos que aceptaran cualquier array."
+      },
+      {
+        phase: "¿corre sin excepción?",
+        ask: "¿Corre sin lanzar excepción?",
+        code: "Object[] arr = new Integer[3];\narr[0] = \"hola\";",
+        answer: false,
+        why: "<em>ArrayStoreException: java.lang.String</em>. Acá está el precio de la covarianza: como el array <strong>sí</strong> conserva su tipo en ejecución (no hay borrado), la JVM verifica <strong>cada escritura</strong> y aborta. Contraste completo con los genéricos: <strong>array = error tardío en ejecución + costo de chequeo en cada escritura; genérico = error temprano en compilación y cero costo</strong>. Ese es el argumento a favor de la invarianza."
+      },
+      {
+        phase: "¿qué imprime?",
+        ask: "¿Imprime <code>true</code>?",
+        code: "System.out.println(\n    new ArrayList<String>().getClass()\n        == new ArrayList<Integer>().getClass()\n);",
+        answer: true,
+        why: "Imprime <code>true</code>. Es el <strong>borrado de tipos</strong> (<em>type erasure</em>) en su forma más cruda: en ejecución solo existe <code>ArrayList</code>, el parámetro genérico se evaporó. Por eso no podés hacer <code>new T[]</code>, ni <code>x instanceof List&lt;String&gt;</code>, ni sobrecargar por genérico. Java eligió el borrado para que el código viejo siguiera funcionando; C# eligió reificar y rompió compatibilidad."
+      },
+      {
+        phase: "¿compila?",
+        ask: "¿Compila?",
+        code: "class U {\n    void f(List<String> l) { }\n    void f(List<Integer> l) { }\n}",
+        answer: false,
+        why: "<em>error: name clash: f(List&lt;Integer&gt;) and f(List&lt;String&gt;) have the same erasure</em>. Tras el borrado ambos métodos son <code>f(List)</code>, o sea la misma firma, y la JVM no podría distinguirlos. Consecuencia directa de la pregunta anterior."
+      },
+      {
+        phase: "¿compila?",
+        ask: "¿Compila?",
+        code: "List<?> l = new ArrayList<String>();\nl.add(\"x\");",
+        answer: false,
+        why: "<em>error: no suitable method found for add(String)</em>. <code>List&lt;?&gt;</code> significa \"una lista de <strong>algún</strong> tipo que no sé cuál es\". Como no se sabe cuál, no se puede insertar nada con seguridad — excepto <code>null</code>. Sí se puede <strong>leer</strong> como <code>Object</code>. Regla PECS: <em>Producer Extends, Consumer Super</em>."
+      }
+    ]
+  },
+  {
+    title: "Identidad, cachés e igualdad",
+    qs: [
+      {
+        phase: "¿qué imprime?",
+        ask: "¿Imprime <code>true / true</code>?",
+        code: "Integer a = 127, b = 127;\nInteger c = 128, d = 128;\nSystem.out.println((a == b) + \" / \" + (c == d));",
+        answer: false,
+        why: "Imprime <code>true / false</code>. El autoboxing usa <code>Integer.valueOf</code>, que mantiene una <strong>caché de instancias de −128 a 127</strong>: dentro de ese rango te devuelve el <em>mismo objeto</em>, fuera crea uno nuevo. <code>==</code> compara referencias, así que el resultado depende del <strong>valor</strong>. Es el argumento más contundente para nunca comparar envoltorios con <code>==</code>."
+      },
+      {
+        phase: "¿corre sin excepción?",
+        ask: "¿Corre sin lanzar excepción?",
+        code: "Integer nulo = null;\nObject o = true ? nulo : 0;",
+        answer: false,
+        why: "<em>NullPointerException</em>, y ni siquiera se llega a evaluar la rama del <code>null</code>... en apariencia. El operador ternario calcula <strong>un solo tipo de resultado</strong> para las dos ramas: como una es <code>Integer</code> y la otra <code>int</code>, aplica <strong>promoción numérica binaria</strong> y el tipo del ternario pasa a ser <code>int</code>. Eso obliga a <strong>desencajonar</strong> <code>nulo</code> llamando a <code>nulo.intValue()</code> → NPE. La condición es <code>true</code>, pero el tipo lo decidió el compilador mirando ambas ramas."
+      },
+      {
+        phase: "¿qué imprime?",
+        ask: "¿Imprime <code>true / false / true / false</code>?",
+        code: "String a = \"hola\";\nString b = \"hola\";\nString c = new String(\"hola\");\n\nfinal String p = \"ho\";\nString d = p + \"la\";\n\nString q = \"ho\";\nString e = q + \"la\";\n\nSystem.out.println((a==b) + \" / \" + (a==c) + \" / \" + (a==d) + \" / \" + (a==e));",
+        answer: true,
+        why: "Correcto. <strong>a==b</strong>: los literales iguales comparten instancia en el <em>string pool</em>. <strong>a==c</strong>: <code>new String</code> fuerza un objeto nuevo. <strong>a==d</strong>: <code>p</code> es <code>final</code> con literal, o sea constante de compilación, así que <code>p + \"la\"</code> se pliega a <code>\"hola\"</code> <em>en compilación</em> y va al pool. <strong>a==e</strong>: <code>q</code> no es <code>final</code>, la concatenación ocurre en ejecución y produce un objeto nuevo. Cuatro veces la misma cadena, cuatro identidades distintas."
+      },
+      {
+        phase: "¿qué imprime?",
+        ask: "¿Imprime <code>1 / 2</code>?",
+        code: "record Punto(int x, int y) { }\n\nclass PtoClase {\n    int x, y;\n    PtoClase(int x, int y) { this.x = x; this.y = y; }\n}\n\nvoid main() {\n    Set<Punto> s1 = new HashSet<>();\n    s1.add(new Punto(1, 2));\n    s1.add(new Punto(1, 2));\n\n    Set<PtoClase> s2 = new HashSet<>();\n    s2.add(new PtoClase(1, 2));\n    s2.add(new PtoClase(1, 2));\n\n    System.out.println(s1.size() + \" / \" + s2.size());\n}",
+        answer: true,
+        why: "Imprime <code>1 / 2</code>. Un <code>record</code> genera automáticamente <code>equals</code> y <code>hashCode</code> por <strong>valor</strong> (comparando todos los componentes), así que el <code>HashSet</code> ve dos puntos iguales y guarda uno. La clase normal hereda los de <code>Object</code>, que comparan por <strong>identidad</strong>, así que son dos objetos distintos. Ese es el aporte real de los records: no ahorrar líneas, sino declarar que el tipo tiene <strong>semántica de valor</strong>."
+      },
+      {
+        phase: "¿corre sin excepción?",
+        ask: "¿Corre sin lanzar excepción?",
+        code: "List<String> l = List.of(\"a\", \"b\");\nl.add(\"c\");",
+        answer: false,
+        why: "<em>UnsupportedOperationException</em>. <code>List.of</code> devuelve una lista <strong>inmutable</strong>, pero el tipo estático sigue siendo <code>List</code>, que declara <code>add</code>. O sea: <strong>compila perfecto y revienta en ejecución</strong>. Java expresa la inmutabilidad en el <em>comportamiento</em>, no en el <em>tipo</em> — una decisión de diseño discutible que se paga con errores tardíos."
+      }
+    ]
+  },
+  {
+    title: "Contratos de sobreescritura y control de flujo",
+    qs: [
+      {
+        phase: "¿qué imprime?",
+        ask: "¿Imprime <code>2 / 1</code>?",
+        code: "static int f() {\n    try { return 1; }\n    finally { return 2; }\n}\n\nstatic int g() {\n    int x = 1;\n    try { return x; }\n    finally { x = 99; }\n}\n\nvoid main() {\n    System.out.println(f() + \" / \" + g());\n}",
+        answer: true,
+        why: "Imprime <code>2 / 1</code>, y las dos mitades enseñan cosas distintas. En <code>f</code>, el <code>return</code> del <code>finally</code> <strong>descarta</strong> el del <code>try</code> — hasta se traga excepciones pendientes, por eso nunca hay que hacer <code>return</code> dentro de un <code>finally</code>. En <code>g</code>, el valor de retorno ya fue <strong>copiado</strong> antes de correr el <code>finally</code>, así que mutar <code>x</code> después no cambia nada. Se devuelve el valor, no la variable."
+      },
+      {
+        phase: "¿compila?",
+        ask: "¿Compila?",
+        code: "class Base {\n    void run() throws IOException { }\n}\n\nclass Sub extends Base {\n    @Override\n    void run() throws Exception { }\n}",
+        answer: false,
+        why: "<em>error: overridden method does not throw Exception</em>. Un override puede lanzar <strong>las mismas excepciones verificadas o menos</strong>, nunca más ni más amplias. Si se permitiera, quien programó contra <code>Base</code> solo atrapó <code>IOException</code> y le llegaría una <code>Exception</code> sin manejar. Es el <strong>principio de sustitución de Liskov</strong> aplicado a las excepciones."
+      },
+      {
+        phase: "¿compila?",
+        ask: "¿Compila?",
+        code: "class Base {\n    void run() throws IOException { }\n    Object get() { return null; }\n}\n\nclass Sub extends Base {\n    @Override\n    void run() throws RuntimeException { }\n\n    @Override\n    String get() { return \"x\"; }\n}",
+        answer: true,
+        why: "Compila. Dos aflojadas legales: <strong>1)</strong> las excepciones <em>no verificadas</em> (<code>RuntimeException</code> y derivadas) están fuera del contrato — se pueden lanzar siempre, se declaren o no. <strong>2)</strong> El <strong>retorno covariante</strong> se permite desde Java 5: devolver <code>String</code> donde se prometía <code>Object</code> es más específico, y quien esperaba un <code>Object</code> sigue satisfecho. La regla general: un override puede <strong>exigir menos y prometer más</strong>, nunca al revés."
+      },
+      {
+        phase: "¿compila?",
+        ask: "¿Compila?",
+        code: "class Base { public void m() { } }\nclass Sub extends Base { protected void m() { } }",
+        answer: false,
+        why: "<em>error: attempting to assign weaker access privileges; was public</em>. Misma lógica que las excepciones: si <code>Base.m()</code> es pública, cualquiera puede llamarla a través de una referencia <code>Base</code>. Que <code>Sub</code> la volviera <code>protected</code> permitiría burlar la restricción con solo declarar la variable como <code>Base</code>. Ampliar el acceso (de <code>protected</code> a <code>public</code>) sí es legal."
+      },
+      {
+        phase: "¿compila?",
+        ask: "¿Compila?",
+        code: "var x = null;",
+        answer: false,
+        why: "<em>error: cannot infer type for local variable x — variable initializer is 'null'</em>. <code>var</code> <strong>no</strong> es tipado dinámico: es inferencia estática, y el tipo se fija para siempre en compilación. Con <code>null</code> no hay de dónde inferirlo. Tampoco sirve para campos, parámetros ni retornos: solo variables locales con inicializador."
+      }
+    ]
+  },
+  {
+    title: "final: qué congela y qué no",
+    qs: [
+      {
+        phase: "¿corre sin excepción?",
+        ask: "¿Compila y corre sin problema?",
+        code: "final List<String> l = new ArrayList<>();\nl.add(\"x\");",
+        answer: true,
+        why: "Sí, imprime <code>[x]</code>. <strong>Exactamente lo mismo que <code>const</code> en JavaScript</strong>: <code>final</code> congela el <strong>vínculo</strong> nombre↔objeto, no el contenido del objeto. Es el mismo malentendido en dos lenguajes distintos, porque nace de la misma confusión entre <em>referencia</em> y <em>valor referido</em>. Para inmutabilidad real: <code>List.copyOf</code> o <code>List.of</code>."
+      },
+      {
+        phase: "¿compila?",
+        ask: "¿Compila?",
+        code: "final List<String> l = new ArrayList<>();\nl = new ArrayList<>();",
+        answer: false,
+        why: "<em>error: cannot assign a value to final variable l</em>. Reasignar el vínculo sí está prohibido — y a diferencia de JavaScript, acá el error es de <strong>compilación</strong>, no una excepción en ejecución. Java atrapa en fase de compilación lo que JS solo puede detectar corriendo."
+      },
+      {
+        phase: "¿compila?",
+        ask: "¿Compila?",
+        code: "interface Cfg { int MAX = 10; }\n\nclass Impl implements Cfg {\n    void set() { MAX = 20; }\n}",
+        answer: false,
+        why: "<em>error: cannot assign a value to static final variable MAX</em>. Todo campo declarado en una interfaz es implícitamente <code>public static final</code>, aunque no escribas ninguna de las tres palabras. Por eso el <code>final static double POOR_PI</code> de la interfaz <code>D</code> del ejercicio es redundante: ya lo era. Y por eso las interfaces <strong>no pueden tener estado de instancia</strong>, que es la razón de fondo por la que su herencia múltiple es segura."
+      }
+    ]
+  },
+  {
+    title: "Aritmética, promoción y desbordamiento",
+    qs: [
+      {
+        phase: "¿qué imprime?",
+        ask: "¿<code>Integer.MAX_VALUE + 1 == Integer.MIN_VALUE</code> da <code>true</code>?",
+        code: "System.out.println(Integer.MAX_VALUE + 1 == Integer.MIN_VALUE);",
+        answer: true,
+        why: "<code>true</code>. Los enteros de Java <strong>se desbordan en silencio</strong>, dando la vuelta en complemento a dos: pasar el máximo te deja en el mínimo. No hay excepción ni aviso. Si querés que truene: <code>Math.addExact(a, b)</code> lanza <code>ArithmeticException</code>."
+      },
+      {
+        phase: "¿qué imprime?",
+        ask: "¿<code>0.1 + 0.2 == 0.3</code> da <code>true</code>?",
+        code: "System.out.println(0.1 + 0.2 == 0.3);\nSystem.out.println(0.1 + 0.2);",
+        answer: false,
+        why: "<code>false</code>, y la segunda línea imprime <code>0.30000000000000004</code>. <strong>Idéntico a JavaScript</strong>, porque los dos usan <code>double</code> IEEE 754 y ni <code>0.1</code> ni <code>0.2</code> tienen representación binaria exacta. No es un defecto del lenguaje sino del formato. Para dinero: <code>BigDecimal</code>, siempre construido desde <code>String</code>."
+      },
+      {
+        phase: "¿qué imprime?",
+        ask: "¿<code>5 / 2</code> imprime <code>2.5</code>?",
+        code: "System.out.println(5 / 2);",
+        answer: false,
+        why: "Imprime <code>2</code>. Si <strong>ambos</strong> operandos son enteros, la división es entera y trunca hacia cero. Basta con que uno sea <code>double</code> (<code>5 / 2.0</code>) para obtener <code>2.5</code>. Diferencia notable con JavaScript, donde todo número es <code>double</code> y <code>5/2</code> da <code>2.5</code>."
+      },
+      {
+        phase: "¿qué imprime?",
+        ask: "¿Imprime <code>ab</code>?",
+        code: "char x = 'a', y = 'b';\nSystem.out.println(x + y);",
+        answer: false,
+        why: "Imprime <code>195</code> (97 + 98). La <strong>promoción numérica binaria</strong> convierte los <code>char</code> a <code>int</code> antes de sumar; <code>char</code> es un tipo numérico entero de 16 bits sin signo, no un \"caracter\" en el sentido de texto. Para concatenar hay que forzar el contexto de String: <code>\"\" + x + y</code> sí da <code>ab</code>."
+      },
+      {
+        phase: "¿compila?",
+        ask: "¿Compila?",
+        code: "byte b = 10;\nb += 300;",
+        answer: true,
+        why: "Compila, y <code>b</code> termina valiendo <strong>54</strong>. Los operadores de asignación compuesta llevan un <strong>casteo reductor implícito</strong>: <code>b += 300</code> significa <code>b = (byte)(b + 300)</code>. El <code>310</code> se trunca a 8 bits → <code>54</code>. Es una comodidad heredada de C que <strong>oculta pérdida de datos sin avisar</strong>."
+      },
+      {
+        phase: "¿compila?",
+        ask: "¿Compila?",
+        code: "byte b = 10;\nb = b + 300;",
+        answer: false,
+        why: "<em>error: incompatible types: possible lossy conversion from int to byte</em>. Escrito así, sin la forma compuesta, no hay casteo implícito: <code>b + 300</code> es un <code>int</code> y asignarlo a un <code>byte</code> requiere casteo explícito. <strong>El mismo cálculo, escrito de dos maneras: una compila en silencio y corrompe el dato, la otra se niega.</strong>"
+      },
+      {
+        phase: "¿qué imprime?",
+        ask: "¿<code>Math.abs(Integer.MIN_VALUE)</code> devuelve un número positivo?",
+        code: "System.out.println(Math.abs(Integer.MIN_VALUE));",
+        answer: false,
+        why: "Devuelve <code>-2147483648</code>, o sea el mismo valor negativo. El rango de <code>int</code> es asimétrico: va de <code>−2147483648</code> a <code>2147483647</code>, así que <strong>el opuesto del mínimo no existe</strong> y la negación se desborda sobre sí misma. Está documentado en el javadoc de <code>Math.abs</code>. Es una fuente real de vulnerabilidades cuando el valor viene de afuera."
+      }
+    ]
+  },
+  {
+    title: "Records, sealed y coincidencia de patrones",
+    qs: [
+      {
+        phase: "¿compila?",
+        ask: "¿Compila, sin rama <code>default</code>?",
+        code: "sealed interface Forma permits Circulo, Cuadrado { }\n\nrecord Circulo(double r)  implements Forma { }\nrecord Cuadrado(double l) implements Forma { }\n\nstatic double area(Forma f) {\n    return switch (f) {\n        case Circulo  c -> Math.PI * c.r() * c.r();\n        case Cuadrado c -> c.l() * c.l();\n    };\n}",
+        answer: true,
+        why: "Compila. <code>sealed</code> le declara al compilador <strong>la lista cerrada</strong> de subtipos posibles, así que puede verificar que el <code>switch</code> es <strong>exhaustivo</strong> y no exigir <code>default</code>. El beneficio real llega después: si mañana agregás <code>record Triangulo</code> al <code>permits</code>, <strong>este <code>switch</code> deja de compilar</strong> y el compilador te lleva de la mano a cada lugar que hay que actualizar. Es la respuesta de la POO a los tipos suma del paradigma funcional."
+      },
+      {
+        phase: "¿compila?",
+        ask: "¿Compila?",
+        code: "record Punto(int x, int y) { }\n\nclass Punto3D extends Punto {\n    Punto3D(int x, int y) { super(x, y); }\n}",
+        answer: false,
+        why: "<em>error: cannot inherit from final Punto</em>. Todo <code>record</code> es implícitamente <code>final</code>. Tiene que serlo: si una subclase pudiera agregar estado, el <code>equals</code> generado por componentes dejaría de ser correcto y se rompería la semántica de valor. Un record <strong>puede</strong> implementar interfaces, pero nunca extender ni ser extendido."
+      },
+      {
+        phase: "¿corre sin excepción?",
+        ask: "¿El <code>new Punto(1,2)</code> corre y el <code>new Punto(-1,2)</code> lanza <code>IllegalArgumentException</code>?",
+        code: "record Punto(int x, int y) {\n    Punto {\n        if (x < 0) throw new IllegalArgumentException(\"x<0\");\n    }\n}\n\nvoid main() {\n    System.out.println(new Punto(1, 2));\n    System.out.println(new Punto(1, 2).equals(new Punto(1, 2)));\n    new Punto(-1, 2);\n}",
+        answer: true,
+        why: "Sí: imprime <code>Punto[x=1, y=2]</code>, luego <code>true</code>, y después lanza la excepción. Ese <code>Punto { ... }</code> sin paréntesis es el <strong>constructor compacto</strong>: corre antes de que se asignen los campos y sirve para validar o normalizar. Los records no son \"structs tontos\" — pueden imponer invariantes, tener métodos y implementar interfaces. Lo único que ceden es la herencia y el estado mutable."
+      }
+    ]
+  }
+];
+
+const $ = (sel) => document.querySelector(sel);
+const quiz = $("#quiz");
+const state = new Map();
+let total = 0;
+
+BLOCKS.forEach((block, bi) => {
+  const section = document.createElement("section");
+  section.className = "block";
+
+  const head = document.createElement("div");
+  head.className = "block-head";
+  const bnum = document.createElement("span");
+  bnum.className = "block-num";
+  bnum.textContent = String(bi + 1).padStart(2, "0");
+  const h2 = document.createElement("h2");
+  h2.textContent = block.title;
+  head.append(bnum, h2);
+  section.append(head);
+
+  block.qs.forEach((q) => {
+    total += 1;
+    const id = total;
+    const card = document.createElement("article");
+    card.className = "card";
+
+    const prompt = document.createElement("div");
+    prompt.className = "prompt";
+    const qnum = document.createElement("span");
+    qnum.className = "qnum";
+    qnum.textContent = String(id).padStart(2, "0");
+    const pbody = document.createElement("div");
+    pbody.className = "promptbody";
+    const phase = document.createElement("span");
+    phase.className = "phase";
+    phase.textContent = q.phase;
+    const ask = document.createElement("p");
+    ask.className = "ask";
+    ask.innerHTML = q.ask;
+    pbody.append(phase, ask);
+    prompt.append(qnum, pbody);
+    card.append(prompt);
+
+    if (q.code) {
+      const pre = document.createElement("pre");
+      pre.className = "code";
+      pre.textContent = q.code;
+      card.append(pre);
+    }
+
+    const answers = document.createElement("div");
+    answers.className = "answers";
+    const yes = document.createElement("button");
+    yes.type = "button";
+    yes.className = "vote";
+    yes.textContent = "SÍ";
+    const no = document.createElement("button");
+    no.type = "button";
+    no.className = "vote";
+    no.textContent = "NO";
+    answers.append(yes, no);
+    card.append(answers);
+
+    const verdict = document.createElement("div");
+    verdict.className = "verdict";
+    const caret = document.createElement("div");
+    caret.className = "caret";
+    caret.setAttribute("aria-hidden", "true");
+    caret.textContent = "^^^^^^";
+    const label = document.createElement("div");
+    label.className = "verdict-label";
+    const why = document.createElement("p");
+    why.className = "why";
+    why.innerHTML = q.why;
+    verdict.append(caret, label, why);
+    card.append(verdict);
+
+    const vote = (choice) => {
+      if (state.has(id)) return;
+      const right = choice === q.answer;
+      state.set(id, right);
+      card.dataset.state = right ? "ok" : "bad";
+      label.textContent = (right ? "Correcto" : "Incorrecto") +
+        " — la respuesta es " + (q.answer ? "SÍ" : "NO");
+      const chosen = choice ? yes : no;
+      const other = choice ? no : yes;
+      chosen.dataset.mark = right ? "right" : "wrong";
+      other.dataset.mark = right ? "dim" : "missed";
+      yes.disabled = true;
+      no.disabled = true;
+      refresh();
+    };
+
+    yes.addEventListener("click", () => vote(true));
+    no.addEventListener("click", () => vote(false));
+
+    section.append(card);
+  });
+
+  quiz.append(section);
+});
+
+const nOk = $("#n-ok");
+const nBad = $("#n-bad");
+const nLeft = $("#n-left");
+const fill = $("#meter-fill");
+const btnFilter = $("#btn-filter");
+const btnReset = $("#btn-reset");
+
+nLeft.textContent = String(total);
+
+function refresh() {
+  let ok = 0;
+  let bad = 0;
+  state.forEach((v) => (v ? (ok += 1) : (bad += 1)));
+  nOk.textContent = String(ok);
+  nBad.textContent = String(bad);
+  nLeft.textContent = String(total - ok - bad);
+  fill.style.width = ((ok + bad) / total) * 100 + "%";
+  btnFilter.disabled = bad === 0;
+  if (bad === 0 && btnFilter.getAttribute("aria-pressed") === "true") {
+    btnFilter.setAttribute("aria-pressed", "false");
+    quiz.classList.remove("filtered");
+  }
+}
+
+btnFilter.addEventListener("click", () => {
+  const on = btnFilter.getAttribute("aria-pressed") === "true";
+  btnFilter.setAttribute("aria-pressed", String(!on));
+  quiz.classList.toggle("filtered", !on);
+});
+
+btnReset.addEventListener("click", () => {
+  state.clear();
+  quiz.classList.remove("filtered");
+  btnFilter.setAttribute("aria-pressed", "false");
+  quiz.querySelectorAll(".card").forEach((card) => {
+    delete card.dataset.state;
+    card.querySelectorAll(".vote").forEach((b) => {
+      b.disabled = false;
+      delete b.dataset.mark;
+    });
+  });
+  refresh();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+
+$("#stamp").textContent = total + " preguntas · " + BLOCKS.length + " bloques";
+refresh();
+</script>
