@@ -2,10 +2,12 @@ import { $$ } from "./tools.ts"
 
 type Fun<T> = (x: T) => T
 
-//Infiere el tipo de retorno (number)
+//Infiere el tipo de retorno
 function apply<T>(f: Fun<T>, x: T) {
     return f(x)
 }
+
+$$(apply((x) => x ** 2 + 1, 10))
 
 $$(((x) => x ** 2 + 1)(10))
 
