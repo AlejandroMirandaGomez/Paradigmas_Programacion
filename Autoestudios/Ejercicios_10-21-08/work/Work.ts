@@ -8,6 +8,7 @@ $$("Ejercicios_10-21-08")
 
 type Stats = { max: number; min: number; avg: number }
 
+// Basicos 0: stats
 function stats(a: number[]): Stats {
     const [first] = a
     if (first === undefined)
@@ -26,8 +27,26 @@ function stats(a: number[]): Stats {
 
 type Person = { id?: number; name: string }
 
+// Basicos 1: personsWithId
 const personsWithId = (a: Person[]) =>
     a.filter((person) => person.id !== undefined).map((person) => person.name)
+
+type Producto = string
+type Objeto = { product: Producto; available: boolean }
+
+// Basicos 2: productosDisponibles
+const productosDisponibles = (objetos: Objeto[], productos: Producto[]) =>
+    productos.filter((p) => objetos.some((o) => o.product === p && o.available))
+
+// Basicos 3: contarElementos
+const contarElementos = (elementos: string[]) =>
+    [...new Set(elementos)].reduce(
+        (acc, curr: string) => ({
+            [curr]: elementos.filter((e) => e === curr).length,
+            ...acc,
+        }),
+        {},
+    )
 
 // ===========================================================
 // Basicos 0: stats (max, min, avg en una sola pasada)
@@ -97,3 +116,69 @@ $$(
     ]),
     "esperado [Ana, Ana]",
 )
+
+// ===========================================================
+// Basicos 2: productosDisponibles (filtrar por propiedad)
+// ===========================================================
+
+$$("__".repeat(20))
+$$("Basicos 2: productosDisponibles")
+
+const objetos: Objeto[] = [
+    { product: "manzana", available: true },
+    { product: "pan", available: false },
+    { product: "leche", available: true },
+]
+
+$$(
+    "mixto            ",
+    productosDisponibles(objetos, ["manzana", "pan", "leche"]),
+    "esperado [manzana, leche]",
+)
+$$(
+    "todos disponibles",
+    productosDisponibles(objetos, ["manzana", "leche"]),
+    "esperado [manzana, leche]",
+)
+$$("ninguno disponible", productosDisponibles(objetos, ["pan"]), "esperado []")
+$$(
+    "producto inexistente",
+    productosDisponibles(objetos, ["queso"]),
+    "esperado []",
+)
+$$("lista de productos vacia", productosDisponibles(objetos, []), "esperado []")
+$$("objetos vacio    ", productosDisponibles([], ["manzana"]), "esperado []")
+$$(
+    "producto repetido",
+    productosDisponibles(objetos, ["manzana", "manzana"]),
+    "esperado [manzana, manzana]",
+)
+
+// ===========================================================
+// Basicos 3: contarElementos (contar elementos con condicion)
+// ===========================================================
+
+$$("__".repeat(20))
+$$("Basicos 3: contarElementos")
+
+$$(
+    "caso normal      ",
+    contarElementos(["red", "blue", "red", "green", "red"]),
+    "esperado { red: 3, blue: 1, green: 1 }",
+)
+$$(
+    "un solo elemento ",
+    contarElementos(["red"]),
+    "esperado { red: 1 }",
+)
+$$(
+    "todos iguales    ",
+    contarElementos(["red", "red", "red"]),
+    "esperado { red: 3 }",
+)
+$$(
+    "todos distintos  ",
+    contarElementos(["red", "blue", "green"]),
+    "esperado { red: 1, blue: 1, green: 1 }",
+)
+$$("array vacio      ", contarElementos([]), "esperado {}")
