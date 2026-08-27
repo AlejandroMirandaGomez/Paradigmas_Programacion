@@ -48,6 +48,21 @@ const contarElementos = (elementos: string[]) =>
         {},
     )
 
+type Usuario = { user: string; roles: string[] }
+
+// Basicos 4: validarPermisos
+const validarPermisos = (usuarios: Usuario[]) =>
+    usuarios.some((u) => u.roles.some((r) => r === "admin"))
+
+type ObjetoTexto = { value: string }
+
+// Basicos 5: validarFormulario
+const validarFormulario = (
+    formulario: ObjetoTexto[],
+    min: number,
+    max: number,
+) => formulario.every((o) => o.value.length >= min && o.value.length <= max)
+
 // ===========================================================
 // Basicos 0: stats (max, min, avg en una sola pasada)
 // ===========================================================
@@ -166,11 +181,7 @@ $$(
     contarElementos(["red", "blue", "red", "green", "red"]),
     "esperado { red: 3, blue: 1, green: 1 }",
 )
-$$(
-    "un solo elemento ",
-    contarElementos(["red"]),
-    "esperado { red: 1 }",
-)
+$$("un solo elemento ", contarElementos(["red"]), "esperado { red: 1 }")
 $$(
     "todos iguales    ",
     contarElementos(["red", "red", "red"]),
@@ -182,3 +193,110 @@ $$(
     "esperado { red: 1, blue: 1, green: 1 }",
 )
 $$("array vacio      ", contarElementos([]), "esperado {}")
+
+// ===========================================================
+// Basicos 4: validarPermisos (al menos un usuario con rol admin)
+// ===========================================================
+
+$$("__".repeat(20))
+$$("Basicos 4: validarPermisos")
+
+$$(
+    "un admin entre varios",
+    validarPermisos([
+        { user: "ana", roles: ["editor"] },
+        { user: "beto", roles: ["admin"] },
+    ]),
+    "esperado true",
+)
+$$(
+    "ningun admin     ",
+    validarPermisos([
+        { user: "ana", roles: ["editor"] },
+        { user: "beto", roles: ["lector", "editor"] },
+    ]),
+    "esperado false",
+)
+$$(
+    "admin entre varios roles",
+    validarPermisos([{ user: "ana", roles: ["lector", "admin", "editor"] }]),
+    "esperado true",
+)
+$$(
+    "todos admin      ",
+    validarPermisos([
+        { user: "ana", roles: ["admin"] },
+        { user: "beto", roles: ["admin"] },
+    ]),
+    "esperado true",
+)
+$$(
+    "roles vacios     ",
+    validarPermisos([
+        { user: "ana", roles: [] },
+        { user: "beto", roles: [] },
+    ]),
+    "esperado false",
+)
+$$("usuarios vacio   ", validarPermisos([]), "esperado false")
+$$(
+    "rol parecido no cuenta",
+    validarPermisos([{ user: "ana", roles: ["administrador", "Admin"] }]),
+    "esperado false",
+)
+
+// ===========================================================
+// Basicos 5: validarFormulario (largo de todos los campos en [min, max])
+// ===========================================================
+
+$$("__".repeat(20))
+$$("Basicos 5: validarFormulario")
+
+const formulario: ObjetoTexto[] = [
+    { value: "ana" },
+    { value: "beto" },
+    { value: "carla" },
+]
+
+$$("todos en rango   ", validarFormulario(formulario, 3, 5), "esperado true")
+$$(
+    "uno muy corto    ",
+    validarFormulario([{ value: "ana" }, { value: "be" }], 3, 5),
+    "esperado false",
+)
+$$(
+    "uno muy largo    ",
+    validarFormulario([{ value: "ana" }, { value: "beto1234" }], 3, 5),
+    "esperado false",
+)
+$$(
+    "limite inferior inclusive",
+    validarFormulario([{ value: "abc" }], 3, 5),
+    "esperado true",
+)
+$$(
+    "limite superior inclusive",
+    validarFormulario([{ value: "abcde" }], 3, 5),
+    "esperado true",
+)
+$$(
+    "campo vacio con min 0",
+    validarFormulario([{ value: "" }], 0, 5),
+    "esperado true",
+)
+$$(
+    "campo vacio con min 1",
+    validarFormulario([{ value: "" }], 1, 5),
+    "esperado false",
+)
+$$("formulario vacio ", validarFormulario([], 3, 5), "esperado true")
+$$(
+    "rango imposible min > max",
+    validarFormulario(formulario, 5, 3),
+    "esperado false",
+)
+$$(
+    "espacios cuentan como largo",
+    validarFormulario([{ value: "   " }], 3, 5),
+    "esperado true",
+)
