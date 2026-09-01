@@ -4,13 +4,18 @@ import {
     agrupacionDatos,
     busquedaRelacional,
     contarElementos,
+    flatten,
+    flattenHasta,
     map,
     personsWithId,
     productosDisponibles,
+    quickSort,
+    quickSortGeneralizada,
     stats,
     validarFormulario,
     validarPermisos,
     type Estudiante,
+    type NArray,
     type Objeto,
     type Pedido,
     type ObjetoTexto,
@@ -611,5 +616,351 @@ describe("Mediano 2: busquedaRelacional", () => {
             busquedaRelacional(pedidos),
             busquedaRelacional(pedidos, distintoDeCero),
         )
+    })
+})
+
+// ===========================================================
+// Recursion 1: quickSort (copia ordenada, sin Array::sort)
+// ===========================================================
+
+describe("Recursion 1: quickSort", () => {
+    test("caso normal", () => {
+        assert.deepEqual(quickSort([3, 6, 1, 8, 2]), [1, 2, 3, 6, 8])
+    })
+
+    test("array vacio", () => {
+        assert.deepEqual(quickSort([]), [])
+    })
+
+    test("un solo elemento", () => {
+        assert.deepEqual(quickSort([9]), [9])
+    })
+
+    test("ya ordenado (peor caso del pivote)", () => {
+        assert.deepEqual(quickSort([1, 2, 3, 4, 5]), [1, 2, 3, 4, 5])
+    })
+
+    test("orden inverso", () => {
+        assert.deepEqual(quickSort([5, 4, 3, 2, 1]), [1, 2, 3, 4, 5])
+    })
+
+    test("conserva los duplicados del pivote", () => {
+        assert.deepEqual(quickSort([5, 5, 3]), [3, 5, 5])
+    })
+
+    test("todos iguales", () => {
+        assert.deepEqual(quickSort([7, 7, 7]), [7, 7, 7])
+    })
+
+    test("duplicados mezclados", () => {
+        assert.deepEqual(quickSort([4, 4, 1, 4, 2]), [1, 2, 4, 4, 4])
+    })
+
+    test("negativos y cero", () => {
+        assert.deepEqual(quickSort([-3, 0, -1, 2]), [-3, -1, 0, 2])
+    })
+
+    test("decimales", () => {
+        assert.deepEqual(quickSort([1.5, -2.5, 0.5]), [-2.5, 0.5, 1.5])
+    })
+
+    test("no muta el array original", () => {
+        const original = [3, 1, 2]
+        quickSort(original)
+        assert.deepEqual(original, [3, 1, 2])
+    })
+
+    test("devuelve una copia, no la misma referencia", () => {
+        const original = [2, 1]
+        assert.notEqual(quickSort(original), original)
+    })
+
+    // quickSort(a) == [...a].sort(numerico) para todo a
+    const azar = () =>
+        Array.from({ length: 40 }, () => Math.floor(Math.random() * 10))
+
+    test("equivale a Array::sort en 200 arrays al azar", () => {
+        for (let i = 0; i < 200; i++) {
+            const a = azar()
+            assert.deepEqual(
+                quickSort(a),
+                [...a].sort((x, y) => x - y),
+            )
+        }
+    })
+})
+
+// ===========================================================
+// Recursion 2: quickSortGeneralizada (quickSort con comparador)
+// ===========================================================
+
+describe("Recursion 2: quickSortGeneralizada", () => {
+    const ascendente = (x: number, y: number) => x - y
+    const descendente = (x: number, y: number) => y - x
+    const alfabetico = (x: string, y: string) => x.localeCompare(y)
+
+    test("numeros ascendente", () => {
+        assert.deepEqual(
+            quickSortGeneralizada([3, 6, 1, 8, 2], ascendente),
+            [1, 2, 3, 6, 8],
+        )
+    })
+
+    test("el comparador invierte el orden", () => {
+        assert.deepEqual(
+            quickSortGeneralizada([3, 6, 1, 8, 2], descendente),
+            [8, 6, 3, 2, 1],
+        )
+    })
+
+    test("array vacio", () => {
+        assert.deepEqual(quickSortGeneralizada([], ascendente), [])
+    })
+
+    test("un solo elemento", () => {
+        assert.deepEqual(quickSortGeneralizada([9], ascendente), [9])
+    })
+
+    test("conserva los equivalentes", () => {
+        assert.deepEqual(
+            quickSortGeneralizada([4, 4, 1, 4, 2], ascendente),
+            [1, 2, 4, 4, 4],
+        )
+    })
+
+    test("todos equivalentes", () => {
+        assert.deepEqual(
+            quickSortGeneralizada([7, 7, 7], ascendente),
+            [7, 7, 7],
+        )
+    })
+
+    test("strings", () => {
+        assert.deepEqual(
+            quickSortGeneralizada(["pera", "ana", "kiwi"], alfabetico),
+            ["ana", "kiwi", "pera"],
+        )
+    })
+
+    test("objetos por un campo", () => {
+        const gente = [
+            { name: "Ana", edad: 30 },
+            { name: "Beto", edad: 25 },
+            { name: "Dani", edad: 20 },
+        ]
+        assert.deepEqual(
+            quickSortGeneralizada(gente, (x, y) => x.edad - y.edad).map(
+                (p) => p.name,
+            ),
+            ["Dani", "Beto", "Ana"],
+        )
+    })
+
+    test("comparador constante deja el orden original", () => {
+        assert.deepEqual(
+            quickSortGeneralizada([3, 1, 2], () => 0),
+            [3, 1, 2],
+        )
+    })
+
+    test("no muta el array original", () => {
+        const original = [3, 1, 2]
+        quickSortGeneralizada(original, ascendente)
+        assert.deepEqual(original, [3, 1, 2])
+    })
+
+    test("devuelve una copia, no la misma referencia", () => {
+        const original = [2, 1]
+        assert.notEqual(quickSortGeneralizada(original, ascendente), original)
+    })
+
+    test("generaliza a quickSort con el comparador numerico", () => {
+        for (let i = 0; i < 200; i++) {
+            const a = Array.from({ length: 40 }, () =>
+                Math.floor(Math.random() * 10),
+            )
+            assert.deepEqual(quickSortGeneralizada(a, ascendente), quickSort(a))
+        }
+    })
+})
+
+// ===========================================================
+// Reto 3: flatten (aplanar un NArray de cualquier profundidad)
+// ===========================================================
+
+describe("Reto 3: flatten", () => {
+    test("ejemplo del enunciado", () => {
+        assert.deepEqual(
+            flatten([0, [[[1]]], [2, [3], [4, [5]]], [], [[6]], [[], 7]]),
+            [0, 1, 2, 3, 4, 5, 6, 7],
+        )
+    })
+
+    test("array vacio", () => {
+        assert.deepEqual(flatten([]), [])
+    })
+
+    test("ya plano lo devuelve igual", () => {
+        assert.deepEqual(flatten([1, 2, 3]), [1, 2, 3])
+    })
+
+    test("un solo nivel de anidamiento", () => {
+        assert.deepEqual(flatten([[1], [2], [3]]), [1, 2, 3])
+    })
+
+    test("anidamiento profundo de un solo elemento", () => {
+        assert.deepEqual(flatten([[[[[9]]]]]), [9])
+    })
+
+    test("arrays vacios anidados desaparecen", () => {
+        assert.deepEqual(flatten([[], [[]], [[[]]]]), [])
+    })
+
+    test("anidamiento escalonado", () => {
+        assert.deepEqual(
+            flatten([1, [2, [3, [4, [5, [6]]]]]]),
+            [1, 2, 3, 4, 5, 6],
+        )
+    })
+
+    test("conserva el orden de izquierda a derecha", () => {
+        assert.deepEqual(flatten([[3], 1, [[2]]]), [3, 1, 2])
+    })
+
+    test("conserva valores falsy", () => {
+        const falsy: NArray<number | boolean | string | null> = [
+            [0, false],
+            [""],
+            [null],
+        ]
+        assert.deepEqual(flatten(falsy), [0, false, "", null])
+    })
+
+    test("conserva duplicados", () => {
+        assert.deepEqual(flatten([1, [1], [[1]]]), [1, 1, 1])
+    })
+
+    test("funciona con strings", () => {
+        assert.deepEqual(flatten([["a"], [["b", "c"]], "d"]), [
+            "a",
+            "b",
+            "c",
+            "d",
+        ])
+    })
+
+    test("funciona con objetos", () => {
+        const ana = { name: "Ana" }
+        const beto = { name: "Beto" }
+        assert.deepEqual(flatten([[ana], [[beto]]]), [ana, beto])
+    })
+
+    test("no muta el array original", () => {
+        const original: NArray<number> = [1, [2, [3]]]
+        flatten(original)
+        assert.deepEqual(original, [1, [2, [3]]])
+    })
+
+    test("aguanta anidamiento de 1000 niveles", () => {
+        const profundo = (n: number): NArray<number> =>
+            n === 0 ? [1] : [profundo(n - 1)]
+        assert.deepEqual(flatten(profundo(1000)), [1])
+    })
+
+    test("equivale a Array::flat(Infinity)", () => {
+        const casos: NArray<number>[] = [
+            [0, [[[1]]], [2, [3], [4, [5]]], [], [[6]], [[], 7]],
+            [1, [2, [3, [4]]]],
+            [[], [[]], [1]],
+            [],
+        ]
+        for (const c of casos)
+            assert.deepEqual(flatten(c), (c as unknown[]).flat(Infinity))
+    })
+})
+
+// ===========================================================
+// Reto 3 (variante): flattenHasta (profundidad maxima inclusive)
+// ===========================================================
+
+describe("Reto 3 (variante): flattenHasta", () => {
+    const ejemplo: NArray<number> = [
+        0,
+        [[[1]]],
+        [2, [3], [4, [5]]],
+        [],
+        [[6]],
+        [[], 7],
+    ]
+
+    test("profundidad 0 no alcanza a nadie", () => {
+        assert.deepEqual(flattenHasta(ejemplo, 0), [])
+    })
+
+    test("profundidad 1 solo los elementos sueltos de afuera", () => {
+        assert.deepEqual(flattenHasta(ejemplo, 1), [0])
+    })
+
+    test("profundidad 2", () => {
+        assert.deepEqual(flattenHasta(ejemplo, 2), [0, 2, 7])
+    })
+
+    test("profundidad 3", () => {
+        assert.deepEqual(flattenHasta(ejemplo, 3), [0, 2, 3, 4, 6, 7])
+    })
+
+    test("profundidad 4 ya alcanza a todos", () => {
+        assert.deepEqual(flattenHasta(ejemplo, 4), [0, 1, 2, 3, 4, 5, 6, 7])
+    })
+
+    test("profundidad de sobra da lo mismo que flatten", () => {
+        assert.deepEqual(flattenHasta(ejemplo, 99), flatten(ejemplo))
+    })
+
+    test("array vacio", () => {
+        assert.deepEqual(flattenHasta([], 3), [])
+    })
+
+    test("array ya plano con profundidad 1", () => {
+        assert.deepEqual(flattenHasta([1, 2, 3], 1), [1, 2, 3])
+    })
+
+    test("profundidad negativa se comporta como 0", () => {
+        assert.deepEqual(flattenHasta(ejemplo, -5), [])
+    })
+
+    test("corta justo en el limite inclusive", () => {
+        assert.deepEqual(flattenHasta([[[9]]], 2), [])
+        assert.deepEqual(flattenHasta([[[9]]], 3), [9])
+    })
+
+    test("conserva el orden de izquierda a derecha", () => {
+        assert.deepEqual(flattenHasta([[3], 1, [[2]], 4], 2), [3, 1, 4])
+    })
+
+    test("conserva valores falsy dentro del limite", () => {
+        const falsy: NArray<number | boolean | string | null> = [
+            0,
+            [false, [""]],
+            [null],
+        ]
+        assert.deepEqual(flattenHasta(falsy, 2), [0, false, null])
+    })
+
+    test("no muta el array original", () => {
+        const original: NArray<number> = [1, [2, [3]]]
+        flattenHasta(original, 2)
+        assert.deepEqual(original, [1, [2, [3]]])
+    })
+
+    test("equivale a flatten cuando el limite supera la profundidad real", () => {
+        const casos: NArray<number>[] = [
+            [1, [2, [3, [4]]]],
+            [[], [[]], [1]],
+            [0, [[[1]]], [2, [3], [4, [5]]], [], [[6]], [[], 7]],
+            [],
+        ]
+        for (const c of casos)
+            assert.deepEqual(flattenHasta(c, 100), flatten(c))
     })
 })

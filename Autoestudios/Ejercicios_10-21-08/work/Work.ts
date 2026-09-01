@@ -91,3 +91,65 @@ export const busquedaRelacional = (
     pedidos: Pedido[],
     pred: (q: number) => boolean = (q) => q !== 0,
 ) => pedidos.some((p) => p.items.some((item) => pred(item.quantity)))
+
+// Recursion 1: quickSort (copia ordenada, sin Array::sort)
+export const quickSort = (a: number[]): number[] => {
+    const [pivote] = a
+    if (pivote === undefined) return a
+
+    return [
+        ...quickSort(a.filter((n) => n < pivote)),
+        ...a.filter((n) => n === pivote),
+        ...quickSort(a.filter((n) => n > pivote)),
+    ]
+}
+
+// Recursion 2: quickSortGeneralizada (quickSort con comparador)
+export const quickSortGeneralizada = <T>(
+    a: T[],
+    comp: (x: T, y: T) => number,
+): T[] => {
+    const [pivote] = a
+    if (pivote === undefined) return a
+
+    return [
+        ...quickSortGeneralizada(
+            a.filter((n) => comp(n, pivote) < 0),
+            comp,
+        ),
+        ...a.filter((n) => comp(n, pivote) === 0),
+        ...quickSortGeneralizada(
+            a.filter((n) => comp(n, pivote) > 0),
+            comp,
+        ),
+    ]
+}
+
+// Reto 3: flatten (aplanar un NArray de cualquier profundidad)
+export type NArray<T> = Array<T | NArray<T>>
+
+const esSubArray = <T>(e: T | NArray<T>): e is NArray<T> => Array.isArray(e)
+
+export function flatten<T>(arr: NArray<T>): T[] {
+    if (arr.every((e): e is T => !esSubArray(e))) return arr
+
+    return flatten(
+        arr.reduce<NArray<T>>(
+            (acc, curr) => [...acc, ...(esSubArray(curr) ? curr : [curr])],
+            [],
+        ),
+    )
+}
+
+// Reto 3 (variante): flatten con profundidad maxima inclusive
+export function flattenHasta<T>(arr: NArray<T>, max_depth: number): T[] {
+    if (max_depth <= 0) return []
+
+    return arr.reduce<T[]>(
+        (acc, curr) => [
+            ...acc,
+            ...(esSubArray(curr) ? flattenHasta(curr, max_depth - 1) : [curr]),
+        ],
+        [],
+    )
+}

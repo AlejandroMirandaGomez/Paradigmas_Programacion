@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx --test --watch test.ts",
+    "dev": "tsx watch Work.ts",
     "test": "tsx --test test.ts",
 	"mon": "nodemon -e ts --exec \"tsc --noEmit\""
   },
