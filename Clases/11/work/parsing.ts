@@ -23,3 +23,13 @@ $$(
 )
 
 $$("Test not: ", not((x) => x > 0)(5))
+
+/////// para el proximo viernes:
+
+function Number(){
+	const re_num = /^\s * \d+ .*$/
+	function parser(){
+		
+	}
+	return parser
+}
