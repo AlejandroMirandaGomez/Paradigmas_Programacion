@@ -1,0 +1,7 @@
+{
+ "watch":["*.java"],
+ "ext": "java",
+ "execMap": {
+   "java" : "java"
+ }
+}
