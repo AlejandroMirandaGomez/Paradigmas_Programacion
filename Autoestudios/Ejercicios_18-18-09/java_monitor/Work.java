@@ -1,5 +1,6 @@
 // Record -> Lo más parecido a un struct, se usa como DTO, son imnutables.
 
+// 
 sealed interface Result<I, T, R> permits Ok, Fail{}
 
 record Ok<I, T, R>(T token, I rest) implements Result<I, T, R>{}
@@ -14,7 +15,7 @@ interface input<T>{
 record InputString(String input, int index) implements input<String>{}
 
 enum TToken {
-	Num, Id
+	Num, Id, Literal
 }
 
 interface IToken<T>{
@@ -30,38 +31,25 @@ interface Parser<I, T, R>{
 
 interface Lexer extends Parser<InputString, TokenString, String> {}
 
-//////// Modelo AST
-
-record NodePattern(Optional<String> variable, List<String> labels) {}
-
-///////
 
 class Lexers{
 	static Lexer Number() {
 		var re_num = Pattern.compile("\\s*(?<token>\\d+)");
-		var re_delim = Pattern.compile("\\W+");
 		
 		Lexer lexer = (InputString source) -> {
 			var input = source.input();
 			var index = source.index();
 			// Obtener el matcher del token
-			var tokenMatcher = re_num.matcher(input);
-			tokenMatcher.region(index, input.length());
+			var matcher = re_num.matcher(input);
+			matcher.region(index, input.length());
 			
 			// Verificar que matchee
-			if(!tokenMatcher.lookingAt()) 
+			if(!matcher.lookingAt()) 
 				return new Fail<>("No number could be match");
 			
-			// Verificar que el delimitador sea correcto
-			var delimMatcher = re_delim.matcher(input);
-			var hasCharsLeft = tokenMatcher.end() < input.length();
-			delimMatcher.region(tokenMatcher.end(), input.length());
-			if(hasCharsLeft && !delimMatcher.lookingAt())
-				return new Fail<>("No identifier could be matched");
-			
 			// Respuesta en caso de todo correcto
-			var token = new TokenString(TToken.Num, tokenMatcher.group("token"));
-			var newIndex = hasCharsLeft ? delimMatcher.end() : tokenMatcher.end();
+			var token = new TokenString(TToken.Num, matcher.group("token"));
+			var newIndex = matcher.end();
 			var newSource = new InputString(input, newIndex);
 			return new Ok<>(token, newSource);
 			
@@ -88,6 +76,27 @@ class Lexers{
 			var newSource = new InputString(input, tokenMatcher.end());
 			return new Ok<>(token, newSource);
 			
+		};
+		return lexer;
+	}
+	
+	static Lexer Literal(String literalInput){
+		var re_literal = Pattern.compile("\\s*(?<token>" + Pattern.quote(literalInput) + ")");
+		
+		Lexer lexer = (InputString source) -> {
+			var input = source.input();
+			var index = source.index();
+			
+			var matcher = re_literal.matcher(input);
+			matcher.region(index, input.length());
+			
+			if(!matcher.lookingAt())
+				return new Fail<>("No literal could be match");
+
+			var newSource = new InputString(input, matcher.end());
+			var token = new TokenString(TToken.Literal, matcher.group("token"));
+			
+			return new Ok<>(token, newSource);
 		};
 		return lexer;
 	}
@@ -130,6 +139,8 @@ class Parsers {
 		return parser;
 	}
 	
+	
+	
 	@SafeVarargs
 	static <I, T, R> Parser <I, T, R> Or(Parser<I, T, R>... parsers){
 		Parser<I, T, R> parser = (I source) -> {
@@ -149,15 +160,15 @@ class Parsers {
 		return parser;
 	}
 	
-	static <I, T, R> Parser <I, Optional<T>, R> Optional(Parser<I, T, R> p){
-		Parser<I, Optional<T>, R> parser = (I source) -> {
+	static <I, T, R> Parser <I, T, R> Optional(Parser<I, T, R> p){
+		Parser<I, T, R> parser = (I source) -> {
 			var result = p.parse(source);
 			switch ( result ){
 				case Fail(R reason) -> {
-					return new Ok<I, Optional<T>, R>(Optional.empty(), source);
+					return new Ok<I, T, R>(null, source);
 				}
 				case Ok(T token, I rest) -> {
-					return new Ok<I, Optional<T>, R>(Optional.of(token), rest);
+					return new Ok<I, T, R>(token, rest);
 				}
 			}
 		};
@@ -167,23 +178,23 @@ class Parsers {
 	
 	static <I, T, R> Parser <I, List<T>, R> Plus(Parser<I, T, R> p){
 		Parser<I, List<T>, R> parser = (I source) -> {
-			List<T> results = new ArrayList<>();
+			List<T> tokens = new ArrayList<>();
 			var isOk = true;
 			while (isOk) {
 				var result = p.parse(source);
 				switch ( result ){
 				case Fail(R reason) -> {
 					isOk = false;
-					if(results.size() == 0)
+					if(tokens.size() == 0)
 						return new Fail<I, List<T>, R>(reason);
 				}
 				case Ok(T token, I rest) -> {
-					results.add( token );
+					tokens.add( token );
 					source = rest;
 				}
 				};
 			}
-			return new Ok<I, List<T>, R>(results, source);
+			return new Ok<I, List<T>, R>(tokens, source);
 		};
 		
 		return parser;
@@ -222,8 +233,87 @@ labels: (":" variable) +;
 
 */
 
+//////// Modelo AST
+
+record NodePattern(Optional<String> variable, List<String> labels) {}
+
+///////
+
 class MiniCyphailGrammar {
+	static Lexer Label(){
+		var re_label = Pattern.compile("\\s*(?<token>:\\w+)");
+		Lexer lexer = (InputString source) -> {
+			var input = source.input();
+			var index = source.index();
+			
+			var matcher = re_label.matcher(input);
+			matcher.region(index, input.length());
+			
+			if(!matcher.lookingAt())
+				return new Fail<>("No label could be match");
+
+			var newSource = new InputString(input, matcher.end());
+			var token = new TokenString(TToken.Literal, matcher.group("token"));
+			
+			return new Ok<>(token, newSource);
+		};
+		return lexer;
+	}
 	
+	static Parser<InputString, List<TokenString>, String> NodePattern(){
+		Parser <InputString, List<TokenString>, String> parser = (InputString source) -> {
+
+			var openLexer = Lexers.Literal("(");
+			var idLexer = Parsers.Optional(Lexers.Id());
+			var labelsLexer = Parsers.Star(MiniCyphailGrammar.Label());
+			var closeLexer = Lexers.Literal(")");
+
+			List<TokenString> tokens = new ArrayList<>();
+
+			switch (openLexer.parse(source)) {
+				case Fail(String reason) -> {
+					return new Fail<>(reason);
+				}
+				case Ok(TokenString token, InputString rest) -> {
+					tokens.add(token);
+					source = rest;
+				}
+			}
+
+			switch (idLexer.parse(source)) {
+				case Fail(String reason) -> {
+					return new Fail<>(reason);
+				}
+				case Ok(TokenString token, InputString rest) -> {
+					tokens.add(token);
+					source = rest;
+				}
+			}
+
+			switch (labelsLexer.parse(source)) {
+				case Fail(String reason) -> {
+					return new Fail<>(reason);
+				}
+				case Ok(List<TokenString> labelTokens, InputString rest) -> {
+					tokens.addAll(labelTokens);
+					source = rest;
+				}
+			}
+
+			switch (closeLexer.parse(source)) {
+				case Fail(String reason) -> {
+					return new Fail<>(reason);
+				}
+				case Ok(TokenString token, InputString rest) -> {
+					tokens.add(token);
+					source = rest;
+				}
+			}
+
+			return new Ok<>(tokens, source);
+		};
+		return parser;
+	}
 }
 
 void test_0(String title){
@@ -361,6 +451,43 @@ void test_6(String title){
 }
 
 
+void test_7(String title){
+	IO.println(title);
+
+	var inputs = List.of("(", "   (", "(abc", ")", "", "abc");
+	for (var input : inputs) {
+		var literalLexer = new Lexers().Literal("(");
+		var source = new InputString(input, 0);
+
+		Result<InputString, TokenString, String> result = literalLexer.parse(source);
+		switch (result) {
+			case Ok<InputString, TokenString, String> ok ->
+				IO.println(String.format(" ( Ok ) >>> Input = '%s' \n    Token = '%s'", input, ok.token));
+			case Fail<InputString, TokenString, String> fail ->
+				IO.println(String.format(" (Fail) >>> Input = '%s' \n    Reason = '%s'", input, fail.reason));
+		}
+	}
+}
+
+void test_8(String title){
+	IO.println(title);
+
+	var inputs = List.of("()", "   ()", "  (p)","  (p:Person)", "(_:Any:One)", "(p:Person:Employee:Player:Male)", "(p:Person", "", "abc");
+	for (var input : inputs) {
+		var nodePattern = new MiniCyphailGrammar().NodePattern();
+		var source = new InputString(input, 0);
+
+		Result<InputString, List<TokenString>, String> result = nodePattern.parse(source);
+		switch (result) {
+			case Ok<InputString, List<TokenString>, String> ok ->
+				IO.println(String.format(" ( Ok ) >>> Input = '%s' \n    Tokens = '%s'", input, ok.token));
+			case Fail<InputString, List<TokenString>, String> fail ->
+				IO.println(String.format(" (Fail) >>> Input = '%s' \n    Reason = '%s'", input, fail.reason));
+		}
+	}
+}
+
+
 void main(){
     IO.println("\n*** Work.java Stars****\n"); 
 	
@@ -373,12 +500,16 @@ void main(){
 	// test_2("~~~~~~~~~TEST 2~~~~~~~~~");
 	// IO.println();
 	// test_3("~~~~~~~~~TEST 3~~~~~~~~~");
+	// IO.println();
+	// test_4("~~~~~~~~~TEST 4~~~~~~~~~");
+	// IO.println();
+	// test_5("~~~~~~~~~TEST 5 (Plus)~~~~~~~~~");
+	// IO.println();
+	// test_6("~~~~~~~~~TEST 6 (Star)~~~~~~~~~");
+	// IO.println();
+	// test_7("~~~~~~~~~TEST 7 (Literal)~~~~~~~~~");
 	IO.println();
-	test_4("~~~~~~~~~TEST 4~~~~~~~~~");
-	IO.println();
-	test_5("~~~~~~~~~TEST 5 (Plus)~~~~~~~~~");
-	IO.println();
-	test_6("~~~~~~~~~TEST 6 (Star)~~~~~~~~~");
+	test_8("~~~~~~~~~TEST 8 (PatternNode)~~~~~~~~~");
 
     IO.println("\n*** Work.java Ends****\n");
 }
