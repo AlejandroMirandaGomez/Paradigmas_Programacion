@@ -7,6 +7,12 @@ record Ok<I, T, R>(T token, I rest) implements Result<I, T, R>{}
 
 record Fail<I, T, R>(R reason) implements Result<I, T, R>{}
 
+sealed interface Result<I, T> permits Ok, Fail{}
+
+record Ok<I, T>(T token, I rest) implements Result<I, T>{}
+
+record Fail<I, T>(String reason) implements Result<I, T>{}
+
 interface input<T>{
 	T input();
 	int index();
@@ -30,7 +36,6 @@ interface Parser<I, T, R>{
 }
 
 interface Lexer extends Parser<InputString, TokenString, String> {}
-
 
 class Lexers{
 	static Lexer Number() {
@@ -257,7 +262,7 @@ class Parsers {
 
 /////// Gramatica
 
-nodePattern: "(" variable? labels? ")";
+nodePattern: "(" variable? labels* ")";
 variable: Id;
 labels: (":" variable) +;
 
