@@ -1,0 +1,16 @@
+{
+  "name": "start-up-funcional",
+  "private": true,
+  "type": "module", 
+  "scripts": {
+    "tsx": "tsx watch Work.ts",
+    "tsc": "nodemon -e ts --exec \"tsc --noEmit\"",
+    "swi": "nodemon -e pl --watch *.pl --exec \"swipl -t halt -g main -s work.pl\"",
+    "java": "nodemon -e pl --watch *.java --exec \"java Work.java\""
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.0.0"
+  }
+}
+
