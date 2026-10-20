@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<NotepadPlus>
+    <UserLang name="Prolog2" ext="pl pro prolog" udlVersion="2.1">
+        <Settings>
+            <Global caseIgnored="no" allowFoldOfComments="yes" foldCompact="no" forcePureLC="0" decimalSeparator="0" />
+            <Prefix Keywords1="no" Keywords2="no" Keywords3="no" Keywords4="no" Keywords5="no" Keywords6="no" Keywords7="no" Keywords8="no" />
+        </Settings>
+        <KeywordLists>
+            <Keywords name="Comments">00% 01 02 03/* 04*/</Keywords>
+            <Keywords name="Numbers, prefix1"></Keywords>
+            <Keywords name="Numbers, prefix2"></Keywords>
+            <Keywords name="Numbers, extras1"></Keywords>
+            <Keywords name="Numbers, extras2"></Keywords>
+            <Keywords name="Numbers, suffix1"></Keywords>
+            <Keywords name="Numbers, suffix2"></Keywords>
+            <Keywords name="Numbers, range"></Keywords>
+            <Keywords name="Operators1">:- ?- --&gt; -&gt; ; | ! \+ =.. =:= =\= @&lt; @&gt; @=&lt; @&gt;= \== == \= = &lt;= &gt;= =&lt; &gt; &lt; is mod rem xor div ** // + - , .</Keywords>
+            <Keywords name="Operators2"></Keywords>
+            <Keywords name="Folders in code1, open">(</Keywords>
+            <Keywords name="Folders in code1, middle"></Keywords>
+            <Keywords name="Folders in code1, close">)</Keywords>
+            <Keywords name="Folders in code2, open">[</Keywords>
+            <Keywords name="Folders in code2, middle"></Keywords>
+            <Keywords name="Folders in code2, close">]</Keywords>
+            <Keywords name="Folders in comment, open"></Keywords>
+            <Keywords name="Folders in comment, middle"></Keywords>
+            <Keywords name="Folders in comment, close"></Keywords>
+            <Keywords name="Keywords1">true false fail not is mod rem xor div</Keywords>
+            <Keywords name="Keywords2">write writeln nl print format read read_term tab halt catch throw call once ignore forall assert asserta assertz retract retractall abolish member memberchk append append length reverse nth0 nth1 last msort sort sort predsort list_to_set permutation subtract intersection union delete exclude include partition findall bagof setof aggregate_all between succ plus numlist sum_list max_list min_list maplist foldl atom_concat atomic_list_concat atom_length atom_codes atom_chars atom_string atom_number char_code number_codes number_string sub_atom sub_string upcase_atom downcase_atom split_string string_concat string_chars string_to_atom string_lower string_upper string_code string_length functor arg copy_term compare ground var nonvar atom atomic number integer float compound callable is_list string char_type succ_or_zero with_output_to format_atom</Keywords>
+            <Keywords name="Keywords3">module use_module dynamic discontiguous initialization set_prolog_flag ensure_loaded multifile table</Keywords>
+            <Keywords name="Keywords4"></Keywords>
+            <Keywords name="Keywords5"></Keywords>
+            <Keywords name="Keywords6"></Keywords>
+            <Keywords name="Keywords7"></Keywords>
+            <Keywords name="Keywords8"></Keywords>
+            <Keywords name="Delimiters">00' 01\ 02' 03" 04\ 05" 06 07 08</Keywords>
+        </KeywordLists>
+        <Styles>
+            <WordsStyle name="DEFAULT" fgColor="000000" bgColor="FFFFFF" fontStyle="0" fontSize="" nesting="0" />
+            <WordsStyle name="COMMENTS" fgColor="808080" bgColor="FFFFFF" fontStyle="2" fontSize="" nesting="0" />
+            <WordsStyle name="NUMBERS" fgColor="FF8000" bgColor="FFFFFF" fontStyle="0" fontSize="" nesting="0" />
+            <WordsStyle name="KEYWORDS1" fgColor="0000FF" bgColor="FFFFFF" fontStyle="1" fontSize="" nesting="0" />
+            <WordsStyle name="KEYWORDS2" fgColor="8000FF" bgColor="FFFFFF" fontStyle="0" fontSize="" nesting="0" />
+            <WordsStyle name="KEYWORDS3" fgColor="008000" bgColor="FFFFFF" fontStyle="1" fontSize="" nesting="0" />
+            <WordsStyle name="KEYWORDS4" fgColor="000000" bgColor="FFFFFF" fontStyle="0" fontSize="" nesting="0" />
+            <WordsStyle name="OPERATORS" fgColor="C00000" bgColor="FFFFFF" fontStyle="1" fontSize="" nesting="0" />
+            <WordsStyle name="FOLDER IN CODE1" fgColor="000000" bgColor="FFFFFF" fontStyle="0" fontSize="" nesting="0" />
+            <WordsStyle name="FOLDER IN CODE2" fgColor="000000" bgColor="FFFFFF" fontStyle="0" fontSize="" nesting="0" />
+            <WordsStyle name="FOLDER IN COMMENT" fgColor="000000" bgColor="FFFFFF" fontStyle="0" fontSize="" nesting="0" />
+            <WordsStyle name="DELIMITERS1" fgColor="A05000" bgColor="FFFFFF" fontStyle="0" fontSize="" nesting="0" />
+            <WordsStyle name="DELIMITERS2" fgColor="008080" bgColor="FFFFFF" fontStyle="0" fontSize="" nesting="0" />
+            <WordsStyle name="DELIMITERS3" fgColor="000000" bgColor="FFFFFF" fontStyle="0" fontSize="" nesting="0" />
+            <WordsStyle name="LINE COMMENTS" fgColor="808080" bgColor="FFFFFF" fontStyle="2" nesting="0" />
+            <WordsStyle name="KEYWORDS5" fgColor="000000" bgColor="FFFFFF" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS6" fgColor="000000" bgColor="FFFFFF" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS7" fgColor="000000" bgColor="FFFFFF" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS8" fgColor="000000" bgColor="FFFFFF" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS4" fgColor="000000" bgColor="FFFFFF" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS5" fgColor="000000" bgColor="FFFFFF" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS6" fgColor="000000" bgColor="FFFFFF" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS7" fgColor="000000" bgColor="FFFFFF" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS8" fgColor="000000" bgColor="FFFFFF" fontStyle="0" nesting="0" />
+        </Styles>
+    </UserLang>
+</NotepadPlus>
