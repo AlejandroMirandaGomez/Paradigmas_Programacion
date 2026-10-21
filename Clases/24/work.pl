@@ -55,6 +55,10 @@ fact(N, PF, F) :- N > 0,
 
 */
 
+first(F, L) :- L = [F | R].
+
+first(F, [F | R]).
+
 % Ejemplo una persona P ama a una cosa X si es barata
 
 loves(P, X) :- person(P), cheap(X).
