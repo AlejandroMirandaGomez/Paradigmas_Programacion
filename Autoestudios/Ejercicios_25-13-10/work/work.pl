@@ -31,10 +31,10 @@ La diferencia clave entre b y c: en b el tercer argumento (ya ligado) acota el l
 */
 
 /*
-Sea L una lista anidada de números, tal como L=[[[0], [1,2], 3], [[4,[[5]]]], [[]], 6]. Escriba deepflat(L, FL) donde L es anidada y FL es la lista de números de L respetando el orden en L. En el ejemplo, FL=[0,1,2,3,4,5,6].
+1. Sea L una lista anidada de números, tal como L=[[[0], [1,2], 3], [[4,[[5]]]], [[]], 6]. Escriba deepflat(L, FL) donde L es anidada y FL es la lista de números de L respetando el orden en L. En el ejemplo, FL=[0,1,2,3,4,5,6].
 */
 
-% deepflat(+L, +T, -FL)
+% deepflat/3: deepflat(+L, +T, -FL)
 
 deepflat(L, FL) :- deepflat(L, [], FL).
 
@@ -49,8 +49,12 @@ deepflat([P | Rest], T, FL) :- is_list(P), !,
 deepflat([P | Rest], T, FL) :- 
 	append(T, [P], T1), 
 	deepflat(Rest, T1, FL).
+	
+/*
+2. Escriba `palindrome(L)` que determine si la lista `L` es o no un palíndrome. Su solución debe ser tiempo `O(n)` para `n=length(L)`. No use `reverse` de `Prolog.`
+*/
 
-% palindrome(L) is true if L is a palindrome
+% palindrome/1: palindrome(+L)
 
 palindrome(L) :- 
 	revertir(L, L).
@@ -62,3 +66,45 @@ revertir([Unico], [Unico]) :- !.
 revertir([P | Rest], R) :-
 	revertir(Rest, R1),
 	append(R1, [P], R).
+	
+/*
+3. Considere este çódigo en `JS` (incluyendo el caso de prueba). Reescriba en `Prolog`. Para simular hileras de interpolación puede usar `format` de Prolog.
+```javascript
+
+function* solve(n){
+    for(let i = 0; i <= n; i++){
+        for(let j = 0; j <= n - i; j++){
+            yield [i, j, n - (i + j)]
+        }
+    }
+}
+function test_solve(n){
+    console.log(`*** Test solve(${n}) ***`);
+    for(const [i,j,k] of solve(n)){
+        console.log(`${i}+${j}+${k}= ${n}`);
+    }
+}
+test_solve(4) 
+          
+```
+*/
+
+% btw(+Low, +High, -X)
+
+btw(Low, High, Low) :- 
+	Low =< High.
+
+btw(Low, High, X) :-
+	Low < High,
+	Low1 is Low + 1,
+	btw(Low1, High, X).
+
+% solve(+N, -K)
+	
+solve(N, K) :-
+	btw(0, N, I),
+	N1 is N - I,
+	btw(0, N1, J),
+	NK is N - (I + J),
+	K = [I, J, NK].
+
