@@ -76,10 +76,6 @@ node_all_props(N, Props) :-
 	node_all_props(G, N, Props),
 .
 
-
-
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%% TESTING %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 /*
