@@ -41,6 +41,10 @@ node_label(ingenieria, intel, 'Company').
 node_label(ingenieria, universidad_nacional, 'Company').
 node_label(ingenieria, acme_tech, 'Company').
 
+
+
+	
+
 node_prop(ingenieria, alejandro, name, 'Alejandro').
 node_prop(ingenieria, andrey, name, 'Andrey').
 node_prop(ingenieria, sebastian, name, 'Sebastian').
@@ -144,6 +148,25 @@ test1 :-
 test2 :-
     ast_ejercicio_3(AST),
     writeln(AST).
+		
+% Una versión en nuesto engine:
+
+cy_exec_query(
+    
+    ( cy_edge(__R, __P, __C),
+      cy_edge_label(__R, 'WORKS_AT'),
+      cy_node_label(__P, 'Person'),
+      cy_node_label(__C, 'Company'),
+      cy_node_prop(__C, 'name', 'ACMETech'),
+      cy_edge_prop(__R, 'salary', __Rsalary),
+      cy_edge_prop(__R, 'since', __Rsince),
+      ( cy_greater_than(_Rsalary, 4000), cy_greater_than(_Rsince, 2020) ),
+      cy_node_prop(__P, 'name', __Pname),
+      cy_edge_prop(__R, 'role', __Rrole)
+    ),
+		['p.name', 'r.role', 'r.salary'],
+    [__Pname, __Rrole, __Rsalary],
+    Rows)
 
 /*
 4. Analice este ejemplo, en el mismo espíritu del ejercicio previo.
