@@ -79,11 +79,9 @@ para evitar explorar ramas redundantes cuando los elementos coinciden.
 lcs_longitud([], _, 0) :- !.
 lcs_longitud(_, [], 0) :- !.
 
-lcs_longitud([X|Xs], [X|Ys], N) :- !,
-	lcs_longitud(Xs, Ys, N1),
+lcs_longitud([X|X_Rest], [X|Y_Rest], N) :- !,
+	lcs_longitud(X_Rest, Y_Rest, N1),
 	N is N1 + 1.
 
-lcs_longitud([X|Xs], [Y|Ys], N) :-
-	lcs_longitud(Xs, [Y|Ys], N1),
-	lcs_longitud([X|Xs], Ys, N2),
-	N is max(N1, N2).
+lcs_longitud([_X|X_Rest], [Y|Y_Rest], N) :-
+	lcs_longitud(X_Rest, [Y|Y_Rest], N).
